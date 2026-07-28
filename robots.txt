@@ -1,0 +1,22 @@
+# robots.txt for the Matrimony API
+#
+# This is a backend REST API, not a public content website — there are no
+# pages here that should ever appear in search results. Every route either
+# requires authentication or returns raw JSON, and the /uploads path serves
+# private member photos that must never be indexed.
+#
+# Block all crawlers from the entire API surface.
+
+User-agent: *
+Disallow: /
+
+# Explicitly called out even though "/" already covers them:
+Disallow: /uploads/          # member profile photos & gallery images
+Disallow: /api/              # Swagger / OpenAPI docs (internal use only)
+Disallow: /auth/
+Disallow: /user/
+Disallow: /members/
+Disallow: /my_profile/
+Disallow: /admin/
+
+# No sitemap — this host does not serve browsable/indexable pages.
