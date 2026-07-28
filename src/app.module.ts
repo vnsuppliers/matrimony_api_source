@@ -99,7 +99,7 @@ import { ApproveSuccessStoryModule } from './admin/approve_success_story/approve
         password: config.get('DB_PASSWORD'),
         database: config.get('DB_NAME'),
         autoLoadEntities: true,
-        synchronize: false,
+        synchronize: true,
         ssl: {
           rejectUnauthorized: false,
         },
