@@ -83,25 +83,29 @@ import { ApproveSuccessStoryModule } from './admin/approve_success_story/approve
     ScheduleModule.forRoot(),
 
     //  DB (MSSQL)
-    TypeOrmModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
+  TypeOrmModule.forRootAsync({
+    inject: [ConfigService],
+    useFactory: (config: ConfigService) => {
+      console.log('DB_HOST:', config.get('DB_HOST'));
+      console.log('DB_PORT:', config.get('DB_PORT'));
+      console.log('DB_USER:', config.get('DB_USER'));
+      console.log('DB_NAME:', config.get('DB_NAME'));
+  
+      return {
         type: 'postgres',
         host: config.get('DB_HOST'),
         port: parseInt(config.get('DB_PORT') || '5432'),
         username: config.get('DB_USER'),
         password: config.get('DB_PASSWORD'),
         database: config.get('DB_NAME'),
-
         autoLoadEntities: true,
         synchronize: false,
-
-        // logging: true, // optional (shows queries)
-
-        // This runs after connection
-        // subscribers: [],
-      }),
-    }),
+        ssl: {
+          rejectUnauthorized: false,
+        },
+      };
+    },
+  }),
 
     //  JWT
     JwtModule.registerAsync({
