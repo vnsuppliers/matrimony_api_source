@@ -73,6 +73,7 @@ import { TermsConditionsModule } from './admin/terms_conditions/terms_conditions
 import { PrivacyPolicyModule } from './admin/master/privacy_policy/privacy_policy.module';
 import { SuccessStoryModule } from './my_profile/success_story/success_story.module';
 import { ApproveSuccessStoryModule } from './admin/approve_success_story/approve_success_story.module';
+import { AppController } from './app.controller';
 
 @Module({
   imports: [
@@ -83,29 +84,25 @@ import { ApproveSuccessStoryModule } from './admin/approve_success_story/approve
     ScheduleModule.forRoot(),
 
     //  DB (MSSQL)
-  TypeOrmModule.forRootAsync({
-    inject: [ConfigService],
-    useFactory: (config: ConfigService) => {
-      console.log('DB_HOST:', config.get('DB_HOST'));
-      console.log('DB_PORT:', config.get('DB_PORT'));
-      console.log('DB_USER:', config.get('DB_USER'));
-      console.log('DB_NAME:', config.get('DB_NAME'));
-  
-      return {
+    TypeOrmModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
         type: 'postgres',
         host: config.get('DB_HOST'),
         port: parseInt(config.get('DB_PORT') || '5432'),
         username: config.get('DB_USER'),
         password: config.get('DB_PASSWORD'),
         database: config.get('DB_NAME'),
+
         autoLoadEntities: true,
-        synchronize: true,
-        ssl: {
-          rejectUnauthorized: false,
-        },
-      };
-    },
-  }),
+        synchronize: false,
+
+        ssl:
+          process.env.NODE_ENV === 'production'
+            ? { rejectUnauthorized: false }
+            : false,
+      }),
+    }),
 
     //  JWT
     JwtModule.registerAsync({
@@ -258,5 +255,6 @@ import { ApproveSuccessStoryModule } from './admin/approve_success_story/approve
 
     ApproveSuccessStoryModule,
   ],
+  controllers: [AppController],
 })
 export class AppModule {}
