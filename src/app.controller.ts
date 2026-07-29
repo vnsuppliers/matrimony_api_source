@@ -6,7 +6,7 @@ export class AppController {
   getHello() {
     return {
       status: 'success',
-      message: 'Matrimony API is running successfully',
+      message: 'Welcome to Vivaha API Source',
     };
   }
 }
