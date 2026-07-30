@@ -193,7 +193,7 @@ export class InterestManagementService {
   }
 
   /**
-   * MUTATION 1: Administrative Rejection (Enforces status = 2, saves reasoning notes)
+   * Administrative Rejection (Enforces status = 2, saves reasoning notes)
    */
   public async reject_interest(
     id: number,
@@ -219,7 +219,7 @@ export class InterestManagementService {
   }
 
   /**
-   * MUTATION 2: Administrative Remove (Purges row completely)
+   * Administrative Remove (Purges row completely)
    */
   public async delete_interest(id: number) {
     const interest = await this.interestRepo.findOne({ where: { id } });

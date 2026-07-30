@@ -74,6 +74,7 @@ import { PrivacyPolicyModule } from './admin/master/privacy_policy/privacy_polic
 import { SuccessStoryModule } from './my_profile/success_story/success_story.module';
 import { ApproveSuccessStoryModule } from './admin/approve_success_story/approve_success_story.module';
 import { AppController } from './app.controller';
+import { MyProfileSettingsModule } from './admin/my-profile-settings/my-profile-settings.module';
 
 @Module({
   imports: [
@@ -254,6 +255,8 @@ import { AppController } from './app.controller';
     SuccessStoryModule,
 
     ApproveSuccessStoryModule,
+
+    MyProfileSettingsModule,
   ],
   controllers: [AppController],
 })

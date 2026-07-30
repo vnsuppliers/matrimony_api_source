@@ -27,6 +27,7 @@ export class UsersListService {
         'm.gender_id',
         'm.profile_image',
       ])
+      .where('user.role_id != :role_id', { role_id: 1 })
       .getMany();
 
     const formattedUsers = users.map((user) => ({

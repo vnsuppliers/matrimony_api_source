@@ -9,15 +9,13 @@ export class StatesController {
   async getStates(@Param('countryId') countryId: string) {
     return this.statesService.find_all_by_country(+countryId);
   }
-  // ==========================================================
-  // FIXED ENDPOINT DEFINITIONS
-  // ==========================================================
+
 
   /**
    * '/get_master_data' is written EXACTLY inside the @Get decorator path string
    * Target URL: GET /master/states/get_master_data
    */
-  @Get('/get_master_data') // <-- Verify this line has the explicit path string!
+  @Get('/get_master_data')
   async getMasterData(
     @Query('page') page?: string,
     @Query('limit') limit?: string,

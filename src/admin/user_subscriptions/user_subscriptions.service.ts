@@ -13,9 +13,6 @@ export class UserSubscriptionsService {
     private readonly usersubscriptionRepo: Repository<UserSubscriptionsEntity>,
   ) {}
 
-  /**
-   * Get unique users list with their absolute LATEST subscription details
-   */
   public async get_subscription_users_list(
     page: number = 1,
     limit: number = 10,
@@ -24,7 +21,6 @@ export class UserSubscriptionsService {
     const safeLimit = Math.max(1, limit);
     const skipAmount = (currentPage - 1) * safeLimit;
 
-    // Subquery to extract only the MAX(id) per user_id (the latest transaction)
     const latestIdsQuery = await this.usersubscriptionRepo
       .createQueryBuilder('sub')
       .select('MAX(sub.id)', 'id')
@@ -42,7 +38,6 @@ export class UserSubscriptionsService {
       };
     }
 
-    // Paginate and load the complete entity schemas matching those specific IDs
     const [subscriptions, totalItems] = await this.usersubscriptionRepo
       .createQueryBuilder('us')
       .leftJoinAndSelect('us.user', 'user')
@@ -52,6 +47,24 @@ export class UserSubscriptionsService {
       .skip(skipAmount)
       .take(safeLimit)
       .getManyAndCount();
+
+    // 💡 Fetch ALL transaction amounts for these specific users to calculate total actual ledger revenue collected
+    const userIds = subscriptions.map((sub) => sub.user?.id).filter(Boolean);
+    
+    let totalLedgerRevenue = 0;
+    if (userIds.length > 0) {
+      const allUserPayments = await this.usersubscriptionRepo
+        .createQueryBuilder('us')
+        .leftJoinAndSelect('us.plan', 'plan')
+        .where('us.user_id IN (:...userIds)', { userIds })
+        .getMany();
+
+      // Sum up all payment amounts where status means it went through (e.g., success, active, or even expired past payments)
+      totalLedgerRevenue = allUserPayments.reduce((sum, item) => {
+        const amt = item.plan?.price ? Number(item.plan.price) : 0;
+        return sum + amt;
+      }, 0);
+    }
 
     const mainGroupList = subscriptions.map((sub) => ({
       user_id: sub.user?.id,
@@ -69,8 +82,9 @@ export class UserSubscriptionsService {
 
     return {
       success: true,
-      message: 'Grouped users list fetched successfully',
+      message: 'Users list fetched successfully',
       data: mainGroupList,
+      total_ledger_revenue: totalLedgerRevenue, // Pass total revenue collected for these users
       meta: {
         totalItems,
         totalPages: Math.ceil(totalItems / safeLimit),
@@ -80,9 +94,6 @@ export class UserSubscriptionsService {
     };
   }
 
-  /**
-   * API Get total payments history list for a SINGLE user on-demand
-   */
   public async get_user_payment_history(userId: number) {
     const history = await this.usersubscriptionRepo
       .createQueryBuilder('us')

@@ -58,7 +58,7 @@ export class SubscriptionPlansService {
       plan.specifications = targetSpecs;
 
       const sss = await this.subscriptionPlanRepo.save(plan);
-      console.log(sss);
+      // console.log(sss);
 
       return {
         message: 'Subscription plan updated successfully',
