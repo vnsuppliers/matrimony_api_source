@@ -11,7 +11,7 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  app.use('/uploads', express.static(join(process.cwd(), 'uploads')));
+ app.use('/api/uploads', express.static(join(process.cwd(), 'uploads')));
 
   // React whitelist
   app.enableCors({
