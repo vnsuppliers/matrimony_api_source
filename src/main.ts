@@ -18,12 +18,12 @@ async function bootstrap() {
     origin: [
       // Users dashboard
       'https://vivahajodi.appwrite.network/',
-      'http://localhost:8080',
-      'http://172.171.1.219:8080',
+      // 'http://localhost:8080',
+      // 'http://172.171.1.219:8080',
 
       // Admin dashboard -> nextjs
       'https://vivaha-admin-gamma.vercel.app',
-      'http://localhost:3000',
+      // 'http://localhost:3000',
 
       // Admin dashboard(Inactive)
       'http://localhost:5173',

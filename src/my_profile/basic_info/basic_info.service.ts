@@ -24,7 +24,23 @@ export class BasicInfoService {
 
     const data = await this.memberRepo
       .createQueryBuilder('member')
-      .leftJoinAndSelect('member.user', 'user')
+      .leftJoin('member.user', 'user')
+      .select([
+        'member',
+        'user.id',
+        'user.first_name',
+        'user.last_name',
+        'user.email',
+        'user.phone',
+        'user.is_online',
+        'user.is_verified',
+        'user.is_premium',
+        'user.role_id',
+        'user.account_status',
+        'user.account_status_message',
+        'user.created_at',
+        'user.updated_at',
+      ])
       .where('member.user_id = :user_id', { user_id })
       .getOne();
 
