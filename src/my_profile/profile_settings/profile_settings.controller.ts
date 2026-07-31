@@ -15,12 +15,13 @@ import { createMulterConfig } from 'src/config/multer.config';
 import { ProfileSettingsService } from './profile_settings.service';
 import { UpdateProfileDto } from '../../dto/update-profile.dto';
 import { AccountStatusGuard } from 'src/auth/guards/account-status.guard';
+import { readdirSync } from 'fs';
+import { join } from 'path';
 
 @UseGuards(JwtAuthGuard, AccountStatusGuard)
 @Controller('profile-settings')
 export class ProfileSettingsController {
   private readonly logger = new Logger(ProfileSettingsController.name);
-
   constructor(
     private readonly profileSettingsService: ProfileSettingsService,
   ) {}
@@ -29,6 +30,17 @@ export class ProfileSettingsController {
   @UseGuards(JwtAuthGuard)
   async getProfile(@Req() req: any) {
     return this.profileSettingsService.get_profile(req.user.id);
+  }
+
+  // TEMPORARY - REMOVE AFTER DEBUGGING
+  @Get('/debug-uploads')
+  debugUploads() {
+    try {
+      const files = readdirSync(join(process.cwd(), 'uploads', 'profile_pictures'));
+      return { cwd: process.cwd(), files };
+    } catch (err: any) {
+      return { cwd: process.cwd(), error: err.message };
+    }
   }
 
   @Put('/update')
@@ -41,8 +53,6 @@ export class ProfileSettingsController {
     @Body() dto: UpdateProfileDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
-    // this.logger.log(`File received: ${JSON.stringify(file)}`);
-    // this.logger.log(`DTO received: ${JSON.stringify(dto)}`);
     return this.profileSettingsService.update_profile(req.user.id, dto, file);
   }
 }
