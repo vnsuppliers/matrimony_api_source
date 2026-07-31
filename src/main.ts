@@ -26,7 +26,7 @@ async function bootstrap() {
       // 'http://localhost:3000',
 
       // Admin dashboard(Inactive)
-      'http://localhost:5173',
+      // 'http://localhost:5173',
     ],
     credentials: true,
   });
