@@ -32,8 +32,8 @@ export class ProfileSettingsService {
       is_online: user?.is_online ?? 0,
       is_verified: user?.is_verified ?? 1,
       account_status_message: user?.account_status_message ?? '',
-      profile_image: member?.profile_image
-      ? `${process.env.APP_URL}/uploads/profile_pictures/${member.profile_image}`
+     profile_image: member?.profile_image
+      ? `/api/uploads/profile_pictures/${member.profile_image}`
       : null,
     };
   }
