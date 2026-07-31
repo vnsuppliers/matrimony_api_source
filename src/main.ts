@@ -17,7 +17,7 @@ async function bootstrap() {
   app.enableCors({
     origin: [
       // Users dashboard
-      'https://vivahajodi.appwrite.network/',
+      'https://vivahajodi.appwrite.network',
       // 'http://localhost:8080',
       // 'http://172.171.1.219:8080',
 
