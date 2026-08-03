@@ -11,19 +11,17 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
- app.use('/api/uploads', express.static(join(process.cwd(), 'uploads')));
+ app.use('/uploads', express.static(join(process.cwd(), 'uploads')));
 
   // React whitelist
   app.enableCors({
     origin: [
       // Users dashboard
       'https://vivahajodi.appwrite.network',
-      // 'http://localhost:8080',
-      // 'http://172.171.1.219:8080',
+
 
       // Admin dashboard -> nextjs
       'https://vivaha-admin-gamma.vercel.app',
-      // 'http://localhost:3000',
 
       // Admin dashboard(Inactive)
       // 'http://localhost:5173',

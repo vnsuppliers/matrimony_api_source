@@ -23,21 +23,19 @@ async get_profile(userId: number) {
   const member = await this.memberRepo.findOne({
     where: { user: { id: userId } },
   });
-
-  const baseUrl = process.env.APP_URL ?? 'https://matrimony-api-source.onrender.com';
-
-  return {
-    first_name: user?.first_name ?? '',
-    last_name: user?.last_name ?? '',
-    email: user?.email ?? '',
-    is_online: user?.is_online ?? 0,
-    is_verified: user?.is_verified ?? 1,
-    account_status_message: user?.account_status_message ?? '',
-    profile_image: member?.profile_image
-      ? `${baseUrl}/api/uploads/profile_pictures/${member.profile_image}`
-      : null,
-  };
-}
+    // Return status along with standard data fields
+    return {
+      first_name: user?.first_name ?? '',
+      last_name: user?.last_name ?? '',
+      email: user?.email ?? '',
+      is_online: user?.is_online ?? 0,
+      is_verified: user?.is_verified ?? 1,
+      account_status_message: user?.account_status_message ?? '',
+      profile_image: member?.profile_image
+        ? `/api/uploads/profile_pictures/${member.profile_image}`
+        : null,
+    };
+  }
 
   async update_profile(
     userId: number,
