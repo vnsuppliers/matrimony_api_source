@@ -2,7 +2,7 @@
 
 A NestJS + TypeScript + PostgreSQL REST API powering a matrimony/matchmaking platform: member onboarding, multi-section profiles, matchmaking, social interactions (interests, shortlists, bookmarks, blocking, reporting), messaging, premium subscriptions (Razorpay), and a full admin back office.
 
-Full technical & user documentation (architecture, data model, complete API reference, matching algorithm, user-facing behavior) lives in **`matrimony_api_documentation.pdf`**. This README covers day-to-day setup and contribution basics.
+This README covers day-to-day setup and contribution basics. For deeper detail see: [PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md) (what this is, domain model), [ARCHITECTURE.md](ARCHITECTURE.md) (request lifecycle, guards, module relationships), [docs/API.md](docs/API.md) (every endpoint), [docs/DATABASE.md](docs/DATABASE.md) (every entity), [docs/MODULES.md](docs/MODULES.md) (every NestJS module), [docs/BUSINESS_FLOW.md](docs/BUSINESS_FLOW.md) (registration/login/payment/etc. sequence diagrams), [SETUP.md](SETUP.md), and [DEPLOYMENT.md](DEPLOYMENT.md). If you're an AI assistant, start with [AI_RULES.md](AI_RULES.md) and [AI_CONTEXT.md](AI_CONTEXT.md) instead of the section below.
 
 ---
 
@@ -88,6 +88,8 @@ ID_SECRET_KEY=
 
 RAZORPAY_KEY_ID=
 RAZORPAY_KEY_SECRET=
+
+FRONTEND_URL=http://localhost:5173
 ```
 
 | Variable | Purpose |
@@ -96,11 +98,14 @@ RAZORPAY_KEY_SECRET=
 | `APP_PORT` | Intended app port — **note:** `main.ts` currently reads `process.env.PORT`, not `APP_PORT`. Set `PORT` too, or fix `main.ts`, to actually control the listen port. |
 | `DB_HOST` / `DB_PORT` / `DB_USER` / `DB_PASSWORD` / `DB_NAME` | PostgreSQL connection |
 | `JWT_SECRET_KEY` / `JWT_EXPIRES_IN` | Access token signing secret + lifetime |
-| `JWT_REFRESH_SECERT_KEY` / `JWT_REFRESH_EXPIRES_IN` | Reserved for a refresh-token flow (not yet implemented — see Known Gaps) |
+| `JWT_REFRESH_SECERT_KEY` / `JWT_REFRESH_EXPIRES_IN` | Defined but **unused** — no dedicated refresh-token flow exists; `POST /auth/refresh-session` just re-signs a fresh access token |
 | `ID_SECRET_KEY` | AES key used to encrypt/decrypt numeric IDs exposed to the frontend |
 | `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` | Razorpay API credentials |
+| `FRONTEND_URL` | Used only to build the `login_url` link inside the registration welcome email (`src/user/user.service.ts`) — **not present in the current `.env`**, so that link is currently broken (`undefined/login`) until this is added |
 
 Never commit a populated `.env` file. Use your hosting platform's secret manager in production.
+
+**Email/SMTP is not configured via environment variables.** Outbound mail (`src/email/`) reads SMTP host/port/credentials and the "from" name/address from the single-row `settings` database table (`SettingsEntity`), not from `.env` — see [docs/DATABASE.md](docs/DATABASE.md) and [docs/BUSINESS_FLOW.md](docs/BUSINESS_FLOW.md).
 
 ## Available Scripts
 
@@ -148,7 +153,7 @@ feature_name/
 └── feature_name.*.spec.ts
 ```
 
-See the full documentation PDF (§3, §9) for the complete module/route index.
+See [docs/MODULES.md](docs/MODULES.md) for the complete module index and [docs/API.md](docs/API.md) for the complete route index.
 
 ## Database
 
@@ -175,7 +180,7 @@ On any multi-instance or ephemeral-filesystem deployment, move this to shared/ob
 - `PremiumGuard` — blocks non-premium users (402) on premium-gated routes.
 - `POST /auth/refresh-session` re-signs a token with the user's current DB status — call this after any account-status change so the client's token stays accurate.
 
-Full account-status matrix and guard details are in the documentation PDF, §6.
+Full account-status matrix and guard details are in [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## API Docs (Swagger)
 
@@ -204,34 +209,11 @@ Every module ships `*.controller.spec.ts` / `*.service.spec.ts` scaffolds. Most 
 - CORS origins are hard-coded, not environment-driven
 - No migration tooling wired up despite `synchronize: false`
 - `JWT_REFRESH_SECERT_KEY` / `JWT_REFRESH_EXPIRES_IN` are defined in `.env` but unused — there's no dedicated refresh-token flow yet, only re-signing an access token from the existing payload
+- `FRONTEND_URL` is read by the registration welcome email but not defined in `.env` — the email's login link is currently broken
 - Most `*.spec.ts` files are unfilled scaffolds
 
 ---
 
 ## Guidance for AI Coding Assistants
 
-If you're an AI assistant (Claude Code, Copilot, Cursor, etc.) working in this repo, follow these conventions so new code matches the existing codebase:
-
-**Module pattern.** Every feature is a self-contained `module/controller/service` triad under `my_profile/`, `members/`, or `admin/`. When adding a new feature, scaffold the same four files (`*.module.ts`, `*.controller.ts`, `*.service.ts`, `*.spec.ts`) and register the module in `app.module.ts`'s `imports` array — don't bolt routes onto an existing unrelated controller.
-
-**Routing conventions.**
-- Member-facing "manage my own data" endpoints live under `my_profile/*`, always scoped to the authenticated user via `@Req() req` → `req.user.id`, never trust a client-supplied user id for "my own" data.
-- Endpoints for viewing/interacting with *other* members live under `members/*`.
-- Admin endpoints live under `admin/*`; admin equivalents of profile sections use the `*-management` suffix and accept an explicit `user_id`/`:id` param since the admin is acting on someone else's data.
-- Create-or-update endpoints follow an **upsert** pattern — a single `POST /update-create/...` (or `/update-create/:id`) route handles both first-time creation and subsequent edits, keyed by the owning user's id. Prefer this pattern over separate POST/PUT routes for one-record-per-user sections.
-
-**Guards.** Apply guards at the controller level with `@UseGuards(...)`, composing from: `JwtAuthGuard` (required on almost everything except `/auth/login` and `/user/registration`), `AccountStatusGuard` (add to any route real members will hit — skip only with `@BypassStatusCheck()` when intentional), and `PremiumGuard` (add to any feature that should be premium-only, matching the existing pattern used by `interests`, `shortlist`, `matched-profiles`, `member-gallery`, `profile-visitors`, `send-messages`, `profile-gallery`).
-
-**IDs in URLs.** Endpoints where a user-supplied ID appears in a "my profile" GET URL typically expect an **AES-encrypted** ID (see `src/common/utils/encryption.util.ts` — `encryptId` / `decryptId`, keyed by `ID_SECRET_KEY`). Don't switch these to raw numeric IDs without updating the frontend contract; conversely, don't encrypt IDs on admin-only or members-list routes where the existing code uses raw numeric IDs — match whatever the sibling routes in that module already do.
-
-**File uploads.** Use `createMulterConfig(folderName)` from `src/config/multer.config.ts` for any new upload field, and build response URLs with `appConfig.uploadsPath(folder, filename)` from `src/config/app.config.ts` — don't hand-roll path concatenation, and don't invent a new storage convention.
-
-**DTOs & validation.** Add a DTO in `src/dto/` for every new request body, using `class-validator` decorators (`@IsOptional()`, `@IsString()`, `@IsNumber()` + `@Type(() => Number)` for numeric query/body fields coming from multipart/form-data). The global `ValidationPipe` has `whitelist: true`, so undeclared fields are silently stripped — if a field isn't showing up server-side, check the DTO first.
-
-**Database.** `synchronize: false` — never assume a new/changed `@Column` is live in the database. Call this out explicitly when you add or modify an entity, and note that a manual migration or schema change is required.
-
-**Before opening a PR / finishing a task:**
-- Run `pnpm run lint` and `pnpm run build` — both must pass cleanly.
-- Add or update the corresponding `*.spec.ts` for any service/controller logic you touch (most are currently empty scaffolds; don't leave new business logic uncovered).
-- If you add or change an endpoint, update the API reference tables in `matrimony_api_documentation.pdf`'s source (or flag it back to a human) so the docs don't drift from the code.
-- Don't widen the hard-coded CORS list or touch guard composition on an existing route without calling it out explicitly — those are security-relevant and should be a visible, reviewable change, not a silent side effect.
+Moved to [AI_RULES.md](AI_RULES.md) (mandatory read order + rules) and [AI_CONTEXT.md](AI_CONTEXT.md) (conventions summary) so there is a single, up-to-date place for this instead of duplicating it here where it could drift.

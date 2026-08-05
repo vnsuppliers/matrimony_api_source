@@ -17,8 +17,8 @@ async function bootstrap() {
   app.enableCors({
     origin: [
       // Users dashboard
-      'https://vivahajodi.appwrite.network',
-
+      // 'https://vivahajodi.appwrite.network',
+      'http://localhost:8080',
 
       // Admin dashboard -> nextjs
       'https://vivaha-admin-gamma.vercel.app',
